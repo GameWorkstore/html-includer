@@ -6,7 +6,7 @@ Develop Sites Faster with HTML Includer!
 Install HTML Includer on your machine:
 
 ```json
-go get -u github.com/GameWorkstore/html-includer
+go install github.com/GameWorkstore/html-includer@latest
 ```
 
 # How to Use
