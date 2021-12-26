@@ -14,12 +14,22 @@ go get -u github.com/GameWorkstore/html-includer
 Use the command below:
 
 ```json
-htmlincluder absolute/path/to/source absolute/path/to/destiny
+./html-includer \
+    absolute/path/to/source \
+    absolute/path/to/destiny \
+    absolute/path/to/ignore1 \ 
+    absolute/path/to/ignore2 \
+    ...
 ```
 
-Source folder should contain html files you want to be resolved.
-
+Source folder should contain the html files you want to be patched with content.
 Destiny folder will be deleted, if exists.
+Source folder will be copied to destiny folder recursively.
+Folders ignored will be skipped entirely and left as it is.
 
-All files in source folder will be copied to destiny folder.
+Lines with:
 
+<script>HtmlInclude();</script>
+<script src="scripts/html-include.js"></script>
+
+Are replaced with empty string.
