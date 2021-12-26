@@ -1,15 +1,14 @@
 package main
 
 import (
-	"errors"
 	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
+	xmldom "github.com/GameWorkstore/html-includer/xmldom"
 	"github.com/otiai10/copy"
-	"github.com/subchen/go-xmldom"
 )
 
 func main() {
@@ -31,13 +30,13 @@ func getArguments() (bool, string, []string) {
 			continue
 		case 1:
 			source = arg
-			if has, _ := directoryExists(source); !has {
+			if err := fileOrDirExists(source); err != nil {
 				return false, "", nil
 			}
 			continue
 		case 2:
 			destiny = arg
-			if has, _ := directoryExists(destiny); has {
+			if err := fileOrDirExists(destiny); err != nil {
 				err := os.RemoveAll(destiny)
 				if err != nil {
 					log.Fatal(err)
@@ -55,15 +54,9 @@ func getArguments() (bool, string, []string) {
 	return true, destiny, ignoreFolders
 }
 
-func directoryExists(filepath string) (bool, error) {
+func fileOrDirExists(filepath string) error {
 	_, err := os.Stat(filepath)
-	if err == nil {
-		return true, nil
-	}
-	if errors.Is(err, os.ErrNotExist) {
-		return false, nil
-	}
-	return false, err
+	return err
 }
 
 func find(root, ext string) []string {
@@ -96,18 +89,66 @@ func patchHTMLFiles(destiny string, folders []string) {
 	}
 }
 
-func patchHTMLFile(filepath string) {
-	println("Compiling ", filepath)
+func patchHTMLFile(fpath string) {
+	println("Compiling ", fpath)
 
-	content, err := os.ReadFile(filepath)
+	content, err := os.ReadFile(fpath)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	parentPath := filepath.Dir(fpath)
+
 	doc := xmldom.Must(xmldom.ParseXML(string(content)))
 	if err != nil {
 		panic(err)
 	}
 
-	print(doc.XMLPretty())
+	var htmlRoot = doc.Root.FindOneByName("html")
+	patchHTMLNodeRecursive(parentPath, htmlRoot)
+
+	result := doc.XMLPretty()
+	result = strings.ReplaceAll(result, "<script src=\"scripts/html-include.js\"></script>", "")
+	result = strings.ReplaceAll(result, "<script src=\"scripts/html-include.js\"/>", "")
+	result = strings.ReplaceAll(result, "<script>HtmlInclude();</script>", "")
+
+	data := []byte(result)
+	os.WriteFile(fpath, data, 0644)
 	println("Done")
+}
+
+func patchHTMLNodeRecursive(parentPath string, htmlNode *xmldom.Node) {
+	att := htmlNode.GetAttribute("html-include")
+	if att != nil {
+		includer := parentPath
+		if strings.HasPrefix(att.Value, "/") {
+			includer += att.Value
+		} else {
+			includer += "/" + att.Value
+		}
+
+		if err := fileOrDirExists(includer); err == nil {
+			println("Node ", htmlNode.Name, " includes ", includer)
+
+			content, err := os.ReadFile(includer)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			doc := xmldom.Must(xmldom.ParseXML(string(content)))
+			if doc.Root.Name == "html-include" {
+				for _, node := range doc.Root.Children {
+					htmlNode.AppendChild(node)
+				}
+			} else {
+				htmlNode.AppendChild(doc.Root)
+			}
+		} else {
+			println("ERROR: Node ", htmlNode.Name, " includes ", includer, "doesn't exists.")
+		}
+		htmlNode.RemoveAttribute("include-html")
+	}
+	for _, node := range htmlNode.Children {
+		patchHTMLNodeRecursive(parentPath, node)
+	}
 }
