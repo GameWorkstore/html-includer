@@ -43,7 +43,9 @@ func printXML(buf *bytes.Buffer, n *Node, level int, indent string) {
 	}
 
 	if len(n.Children) == 0 && len(n.Text) == 0 {
-		buf.WriteString(" />")
+		buf.WriteString("></")
+		buf.WriteString(n.Name)
+		buf.WriteString(">")
 		if pretty {
 			buf.WriteByte('\n')
 		}

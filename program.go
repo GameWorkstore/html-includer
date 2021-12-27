@@ -108,7 +108,7 @@ func patchHTMLFile(fpath string) {
 
 	var htmlRoot = doc.Root.FindOneByName("html")
 	patchHTMLNodeRecursive(parentPath, htmlRoot)
-
+	RemoveHTMLIncluderJavascripts(htmlRoot)
 	result := doc.XMLPretty()
 	result = strings.ReplaceAll(result, "<script src=\"scripts/html-include.js\"></script>", "")
 	result = strings.ReplaceAll(result, "<script src=\"scripts/html-include.js\"/>", "")
@@ -120,8 +120,10 @@ func patchHTMLFile(fpath string) {
 	println("Done")
 }
 
+const attName = "html-include"
+
 func patchHTMLNodeRecursive(parentPath string, htmlNode *xmldom.Node) {
-	att := htmlNode.GetAttribute("html-include")
+	att := htmlNode.GetAttribute(attName)
 	if att != nil {
 		includer := parentPath
 		if strings.HasPrefix(att.Value, "/") {
@@ -149,9 +151,33 @@ func patchHTMLNodeRecursive(parentPath string, htmlNode *xmldom.Node) {
 		} else {
 			println("ERROR: Node ", htmlNode.Name, " includes ", includer, "doesn't exists.")
 		}
-		htmlNode.RemoveAttribute("include-html")
+		htmlNode.RemoveAttribute(attName)
 	}
+
 	for _, node := range htmlNode.Children {
 		patchHTMLNodeRecursive(parentPath, node)
 	}
+}
+
+func RemoveHTMLIncluderJavascripts(htmlNode *xmldom.Node) bool {
+	if htmlNode.Name == "script" {
+		if htmlNode.Text == "HtmlInclude();" {
+			return true
+		}
+		if att := htmlNode.GetAttribute("src"); att != nil {
+			if strings.HasSuffix(att.Value, "html-include.js") {
+				return true
+			}
+		}
+	}
+
+	var nodes []*xmldom.Node
+	for _, node := range htmlNode.Children {
+		if RemoveHTMLIncluderJavascripts(node) {
+			continue
+		}
+		nodes = append(nodes, node)
+	}
+	htmlNode.Children = nodes
+	return false
 }

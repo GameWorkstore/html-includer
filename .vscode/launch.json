@@ -12,9 +12,9 @@
             "program": "${fileDirname}",
             "args": [
                 "/Users/john.rosa/Documents/GitHub/phyrexi/phy-sites/phyrexi.com",
-                "/Users/john.rosa/Documents/GitHub/phyrexi/phy-sites/phyrexi.com.generated/",
-                "/Users/john.rosa/Documents/GitHub/phyrexi/phy-sites/phyrexi.com.generated/games/",
-                "/Users/john.rosa/Documents/GitHub/phyrexi/phy-sites/phyrexi.com.generated/includes/"
+                "/Users/john.rosa/Documents/GitHub/phyrexi/phy-sites/phyrexi.com.gen/",
+                "/Users/john.rosa/Documents/GitHub/phyrexi/phy-sites/phyrexi.com.gen/games/",
+                "/Users/john.rosa/Documents/GitHub/phyrexi/phy-sites/phyrexi.com.gen/includes/"
             ]
         }
     ]
