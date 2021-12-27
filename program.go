@@ -112,6 +112,7 @@ func patchHTMLFile(fpath string) {
 	result := doc.XMLPretty()
 	result = strings.ReplaceAll(result, "<script src=\"scripts/html-include.js\"></script>", "")
 	result = strings.ReplaceAll(result, "<script src=\"scripts/html-include.js\"/>", "")
+	result = strings.ReplaceAll(result, "<script src=\"scripts/html-include.js\" />", "")
 	result = strings.ReplaceAll(result, "<script>HtmlInclude();</script>", "")
 
 	data := []byte(result)
