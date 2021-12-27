@@ -12,15 +12,17 @@ import (
 )
 
 func main() {
-	ok, destiny, ignoreFolders := getArguments()
+	ok, source, destiny, ignoreFolders := getArguments()
 	if !ok {
 		printExplanation()
 		return
+	} else {
+		printArgs(source, destiny, ignoreFolders)
 	}
 	patchHTMLFiles(destiny, ignoreFolders)
 }
 
-func getArguments() (bool, string, []string) {
+func getArguments() (bool, string, string, []string) {
 	var source string
 	var destiny string
 	var ignoreFolders []string
@@ -31,7 +33,7 @@ func getArguments() (bool, string, []string) {
 		case 1:
 			source = arg
 			if err := fileOrDirExists(source); err != nil {
-				return false, "", nil
+				return false, "", "", nil
 			}
 			continue
 		case 2:
@@ -51,7 +53,7 @@ func getArguments() (bool, string, []string) {
 			continue
 		}
 	}
-	return true, destiny, ignoreFolders
+	return true, source, destiny, ignoreFolders
 }
 
 func fileOrDirExists(filepath string) error {
