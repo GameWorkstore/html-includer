@@ -2,10 +2,11 @@ package main
 
 import "fmt"
 
-const ProgramName = "Html Includer v0.1.4"
+const ProgramName = "Html Includer"
+const ProgramVersion = "v0.1.5"
 
 func printExplanation() {
-	fmt.Println(ProgramName)
+	fmt.Println(ProgramName, ProgramVersion)
 	fmt.Println("")
 	fmt.Println("htmlincluder requires a source directory and destiny directory as arguments")
 	fmt.Println("htmlincluder \\\n" +
@@ -17,7 +18,7 @@ func printExplanation() {
 }
 
 func printArgs(source string, destiny string, ignoreFolders []string) {
-	fmt.Println(ProgramName)
+	fmt.Println(ProgramName, ProgramVersion)
 	fmt.Println("SOURCE:", source)
 	fmt.Println("DESTINY:", destiny)
 	fmt.Println("IGNORED FOLDERS:")

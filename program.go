@@ -16,9 +16,8 @@ func main() {
 	if !ok {
 		printExplanation()
 		return
-	} else {
-		printArgs(source, destiny, ignoreFolders)
 	}
+	printArgs(source, destiny, ignoreFolders)
 	patchHTMLFiles(destiny, ignoreFolders)
 }
 
@@ -101,7 +100,9 @@ func patchHTMLFile(fpath string) {
 
 	parentPath := filepath.Dir(fpath)
 
-	doc := xmldom.Must(xmldom.ParseXML(string(content)))
+	sContent := PreprocessFile(string(content))
+
+	doc := xmldom.Must(xmldom.ParseXML(sContent))
 	if err != nil {
 		panic(err)
 	}
@@ -109,11 +110,9 @@ func patchHTMLFile(fpath string) {
 	var htmlRoot = doc.Root.FindOneByName("html")
 	patchHTMLNodeRecursive(parentPath, htmlRoot)
 	RemoveHTMLIncluderJavascripts(htmlRoot)
+
 	result := doc.XMLPretty()
-	result = strings.ReplaceAll(result, "<script src=\"scripts/html-include.js\"></script>", "")
-	result = strings.ReplaceAll(result, "<script src=\"scripts/html-include.js\"/>", "")
-	result = strings.ReplaceAll(result, "<script src=\"scripts/html-include.js\" />", "")
-	result = strings.ReplaceAll(result, "<script>HtmlInclude();</script>", "")
+	result = PostprocessFile(result)
 
 	data := []byte(result)
 	os.WriteFile(fpath, data, 0644)
@@ -140,7 +139,9 @@ func patchHTMLNodeRecursive(parentPath string, htmlNode *xmldom.Node) {
 				log.Fatal(err)
 			}
 
-			doc := xmldom.Must(xmldom.ParseXML(string(content)))
+			sContent := PreprocessFile(string(content))
+
+			doc := xmldom.Must(xmldom.ParseXML(sContent))
 			if doc.Root.Name == "html-include" {
 				for _, node := range doc.Root.Children {
 					htmlNode.AppendChild(node)
@@ -180,4 +181,23 @@ func RemoveHTMLIncluderJavascripts(htmlNode *xmldom.Node) bool {
 	}
 	htmlNode.Children = nodes
 	return false
+}
+
+const br_tag = "<br>"
+const br_tag_alt = "$$$br$$$"
+const brb_tag = "<br/>"
+const brb_tag_alt = "$$$brb$$$"
+
+// replace <br>, <br/> tags to something else.
+func PreprocessFile(fileContent string) string {
+	fileContent = strings.ReplaceAll(fileContent, br_tag, br_tag_alt)
+	fileContent = strings.ReplaceAll(fileContent, brb_tag, brb_tag_alt)
+	return fileContent
+}
+
+// restore <br>, <br/> tags.
+func PostprocessFile(fileContent string) string {
+	fileContent = strings.ReplaceAll(fileContent, br_tag_alt, br_tag)
+	fileContent = strings.ReplaceAll(fileContent, brb_tag_alt, brb_tag)
+	return fileContent
 }
